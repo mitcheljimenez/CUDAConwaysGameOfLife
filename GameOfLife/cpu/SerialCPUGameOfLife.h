@@ -11,9 +11,7 @@ class SerialCPUGameOfLife {
 	private:
 		int boardWidth;
 		int boardHeight;
-
 		ubyte* board;
-		ubyte* resultBoard;
 
 	public:
         SerialCPUGameOfLife();
@@ -24,28 +22,8 @@ class SerialCPUGameOfLife {
         void printBoard(string title);
 };
 
-void computeIterationSerial() {
-    for (int y = 0; y < boardHeight; ++y) {
-        int y0 = ((y + boardHeight - 1) % boardHeight) * boardWidth;
-        int y1 = y * boardWidth;
-        int y2 = ((y + 1) % boardHeight) * boardWidth;
-
-        for (int x = 0; x < boardWidth; ++x) {
-            int x0 = (x + boardWidth - 1) % boardWidth;
-            int x2 = (x + 1) % boardWidth;
-
-            ubyte aliveCells = countAliveCells(x0, x, x2, y0, y1, y2);
-            m_resultboard[y1 + x] =
-                aliveCells == 3 || (aliveCells == 2 && board[x + y1]) ? 1 : 0;
-        }
-    }
-
-    swap(board, m_resultboard);
-}
-
 SerialCPUGameOfLife::SerialCPUGameOfLife() : boardHeight(800), boardWidth(600) {
     board = (ubyte*)malloc(boardWidth * boardHeight * sizeof(ubyte));
-
 
     for (int i = 0; i < boardWidth; i++) {
         for (int j = 0; j < boardHeight; j++) {
@@ -102,8 +80,8 @@ void SerialCPUGameOfLife::startGame(int numberOfIterations) {
                 int x0 = (i + boardWidth - 1) % boardWidth;
                 int x2 = (i + 1) % boardWidth;
 
-                ubyte aliveCells = countAliveCells(x0, i, x2, y0, y1, y2);
-                m_resultboard[y1 + i] =
+                ubyte aliveCells = countAliveCells(board, x0, i, x2, y0, y1, y2);
+                resultBoard[y1 + i] =
                     aliveCells == 3 || (aliveCells == 2 && board[i + y1]) ? 1 : 0;
             }
         }
