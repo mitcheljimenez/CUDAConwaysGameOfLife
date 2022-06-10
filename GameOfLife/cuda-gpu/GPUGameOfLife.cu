@@ -1,12 +1,10 @@
-#include <cuda.h>
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include <iostream>
+#include "../../../../../../../Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/include/driver_types.h"
+#include "../../../../../../../Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/include/cuda.h"
+#include "../../../../../../../Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/include/cuda_runtime.h"
+#include "../../../../../../../Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/include/device_launch_parameters.h"
 
 #define BLOCK_SIZE 16
 
@@ -33,7 +31,7 @@ GPUGameOfLife::GPUGameOfLife() : boardHeight(800), boardWidth(600) {
 	for (int i = 0; i < boardWidth; i++) {
 		for (int j = 0; j < boardHeight; j++) {
 			float random = rand() / (float)RAND_MAX;
-			board[i * boardWith + j] = (random >= 0.5) ? 0x1 : 0x0;
+			board[i * boardWidth + j] = (random >= 0.5) ? 0x1 : 0x0;
 		}
 	}
 }
@@ -44,15 +42,15 @@ GPUGameOfLife::GPUGameOfLife(int width, int height) : boardHeight(height), board
 	for (int i = 0; i < boardWidth; i++) {
 		for (int j = 0; j < boardHeight; j++) {
 			float random = rand() / (float)RAND_MAX;
-			board[i * boardWith + j] = (random >= 0.5) ? 0x1 : 0x0;
+			board[i * boardWidth + j] = (random >= 0.5) ? 0x1 : 0x0;
 		}
 	}
 }
 
 GPUGameOfLife::~GPUGameOfLife() {
 	delete board;
-	delete boardHeight;
-	delete boardWidth;
+	delete &boardHeight;
+	delete &boardWidth;
 }
 
 
@@ -167,8 +165,6 @@ cudaError_t GPUGameOfLife::startGame(int numberOfIterations) {
 	}
 
 	cudaMemcpy(board, currBoard, boardWidth * boardHeight * sizeof(ubyte), cudaMemcpyDeviceToHost);
-
-	this->printBoard("Resulting Board:");
 
 	Error:
 		cudaFree(cudaBoard);

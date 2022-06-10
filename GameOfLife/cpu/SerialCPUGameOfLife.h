@@ -1,8 +1,6 @@
 #pragma once
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include <iostream>
 
 typedef unsigned char ubyte;
@@ -28,7 +26,7 @@ SerialCPUGameOfLife::SerialCPUGameOfLife() : boardHeight(800), boardWidth(600) {
     for (int i = 0; i < boardWidth; i++) {
         for (int j = 0; j < boardHeight; j++) {
             float random = rand() / (float)RAND_MAX;
-            board[i * boardWith + j] = (random >= 0.5) ? 0x1 : 0x0;
+            board[i * boardWidth + j] = (random >= 0.5) ? 0x1 : 0x0;
         }
     }
 }
@@ -39,15 +37,15 @@ SerialCPUGameOfLife::SerialCPUGameOfLife(int width, int height) : boardHeight(he
     for (int i = 0; i < boardWidth; i++) {
         for (int j = 0; j < boardHeight; j++) {
             float random = rand() / (float)RAND_MAX;
-            board[i * boardWith + j] = (random >= 0.5) ? 0x1 : 0x0;
+            board[i * boardWidth + j] = (random >= 0.5) ? 0x1 : 0x0;
         }
     }
 }
 
 SerialCPUGameOfLife::~SerialCPUGameOfLife() {
     delete board;
-    delete boardHeight;
-    delete boardWidth;
+    delete &boardHeight;
+    delete &boardWidth;
 }
 
 void SerialCPUGameOfLife::printBoard(string title) {
