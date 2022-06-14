@@ -1,17 +1,19 @@
 cmake_minimum_required(VERSION 3.22)
-project(GameOfLife)
 
-set(CMAKE_CXX_STANDARD 14)
+project(GameOfLife
+	VERSION 1
+	LANGUAGES CXX CUDA
+)
 
-enable_testing()
+enable_language(CUDA)
 
-add_subdirectory(extern)
-add_subdirectory(test)
-add_subdirectory(cpu)
-add_subdirectory(cuda-gpu)
+foreach(lang CXX CUDA)
+    set(CMAKE_${lang}_STANDARD          14)
+    set(CMAKE_${lang}_STANDARD_REQUIRED ON)
+    set(CMAKE_${lang}_EXTENSIONS        OFF)
+endforeach()
 
-# add_library(matrix INTERFACE matrix.h)
+include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-# add_executable(CudaGameOfLife main.cpp  "cuda-gpu/main.cpp" "cuda-gpu/GPUGameOfLife.cu")
-add_executable(CudaGameOfLife main.cpp "cpu/SerialCPUGameOfLife.h" "cuda-gpu/GPUGameOfLife.cu")
-# target_link_libraries(matrix_exec matrix)
+add_executable(GPUCudaGameOfLife main.cpp "cuda-gpu/GPUGameOfLife.h" "cuda-gpu/kernelWithIfs.cu")
+add_executable(CPUGameOfLife cpu-test.cpp "cpu/SerialCPUGameOfLife.h")

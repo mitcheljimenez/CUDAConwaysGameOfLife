@@ -1,7 +1,11 @@
 #pragma once
+
+using namespace std;
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include "countAliveCells.h"
 
 typedef unsigned char ubyte;
 
@@ -23,27 +27,37 @@ class SerialCPUGameOfLife {
 SerialCPUGameOfLife::SerialCPUGameOfLife() : boardHeight(800), boardWidth(600) {
     board = (ubyte*)malloc(boardWidth * boardHeight * sizeof(ubyte));
 
-    for (int i = 0; i < boardWidth; i++) {
-        for (int j = 0; j < boardHeight; j++) {
-            float random = rand() / (float)RAND_MAX;
-            board[i * boardWidth + j] = (random >= 0.5) ? 0x1 : 0x0;
+    if (board) {
+        for (int i = 0; i < boardWidth; i++) {
+            for (int j = 0; j < boardHeight; j++) {
+                float random = rand() / (float)RAND_MAX;
+                *(board + (i * boardWidth + j)) = (random >= 0.5) ? 0x1 : 0x0;
+            }
         }
+    }
+    else {
+        throw runtime_error("malloc failed");
     }
 }
 
 SerialCPUGameOfLife::SerialCPUGameOfLife(int width, int height) : boardHeight(height), boardWidth(width) {
     board = (ubyte*)malloc(boardWidth * boardHeight * sizeof(ubyte));
 
-    for (int i = 0; i < boardWidth; i++) {
-        for (int j = 0; j < boardHeight; j++) {
-            float random = rand() / (float)RAND_MAX;
-            board[i * boardWidth + j] = (random >= 0.5) ? 0x1 : 0x0;
+    if (board) {
+        for (int i = 0; i < boardWidth; i++) {
+            for (int j = 0; j < boardHeight; j++) {
+                float random = rand() / (float)RAND_MAX;
+                *(board + (i * boardWidth + j)) = (random >= 0.5) ? 0x1 : 0x0;
+            }
         }
+    }
+    else {
+        throw runtime_error("malloc failed");
     }
 }
 
 SerialCPUGameOfLife::~SerialCPUGameOfLife() {
-    delete board;
+    free(board);
     delete &boardHeight;
     delete &boardWidth;
 }
@@ -57,12 +71,6 @@ void SerialCPUGameOfLife::printBoard(string title) {
         }
         cout << "\n";
     }
-}
-
-static inline ubyte countAliveCells(ubyte* board, int x0, int x1, int x2, int y0, int y1, int y2) {
-    return board[x0 + y0] + board[x1 + y0] + board[x2 + y0]
-        + board[x0 + y1] + board[x2 + y1]
-        + board[x0 + y2] + board[x1 + y2] + board[x2 + y2];
 }
 
 void SerialCPUGameOfLife::startGame(int numberOfIterations) {
@@ -79,7 +87,7 @@ void SerialCPUGameOfLife::startGame(int numberOfIterations) {
                 int x2 = (i + 1) % boardWidth;
 
                 ubyte aliveCells = countAliveCells(board, x0, i, x2, y0, y1, y2);
-                resultBoard[y1 + i] =
+                *(resultBoard + y1 + i) =
                     aliveCells == 3 || (aliveCells == 2 && board[i + y1]) ? 1 : 0;
             }
         }
@@ -87,5 +95,5 @@ void SerialCPUGameOfLife::startGame(int numberOfIterations) {
         swap(board, resultBoard);
     }
 
-    delete resultBoard;
+    free(resultBoard);
 }
