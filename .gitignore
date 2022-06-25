@@ -364,4 +364,6 @@ FodyWeavers.xsd
 
 build/
 final_state.dat
+ChosenParams.params
+RandomInputs.dat
 .idea

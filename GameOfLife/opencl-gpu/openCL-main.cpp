@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <random>
+#include <chrono>
 
 #define __CL_ENABLE_EXCEPTIONS
 #ifdef __APPLE__
@@ -10,6 +12,7 @@
 #endif
 
 #include "util.hpp"
+#include "err_code.h"
 
 //pick up device type from compiler command line or from 
 //the default type
@@ -32,8 +35,14 @@ void load_board(std::vector<char>& board, const char* file, const unsigned int n
 void print_board(const std::vector<char>& board, const unsigned int nx, const unsigned int ny);
 void save_board(const std::vector<char>& board, const unsigned int nx, const unsigned int ny);
 void load_params(const char* file, unsigned int* nx, unsigned int* ny, unsigned int* iterations);
+void load_chosen_params();
+void load_random_board(const unsigned int nx, const unsigned int ny);
+int load_chosen_blocksizeX();
+int load_chosen_blocksizeY();
 
-#include "err_code.h"
+
+
+
 
 /*************************************************************************************
  * Main function
@@ -43,15 +52,23 @@ int main(int argc, char** argv)
 {
 
     // Check we have a starting state file
-    if (argc != 5)
+    if (argc != 5 && argc != 1)
     {
-        printf("Usage:\n./gameoflife input.dat input.params bx by\n");
-        printf("\tinput.dat\tpattern file\n");
-        printf("\tinput.params\tparameter file defining board size\n");
-        printf("\tbx by\tsizes of thread blocks - must divide the board size equally\n");
+  
+        printf("Usage:\n./No inputs or examples as described in readme\n");
+
         return EXIT_FAILURE;
     }
+    else if(argc == 1) {
+        load_chosen_params();
+        argv[1] = "inputs/RandomInputs.dat";
+        argv[2] = "inputs/ChosenParams.params";
 
+        argv[3] = (char*)load_chosen_blocksizeX();
+        argv[4] = (char*)load_chosen_blocksizeY();
+
+        
+    }
     // Board dimensions and iteration total
     unsigned int nx, ny;
     unsigned int bx = atoi(argv[3]);
@@ -60,6 +77,7 @@ int main(int argc, char** argv)
     int platform_id = 0, device_id = 0;
 
     load_params(argv[2], &nx, &ny, &iterations);
+    load_random_board(nx, ny);
 
     // Create OpenCL context, queue and program
     try
@@ -107,6 +125,7 @@ int main(int argc, char** argv)
         cl::Buffer d_board_tock(context, CL_MEM_READ_WRITE, sizeof(char) * nx * ny);
 
         // Load in the starting state to host board and copy to device
+        
         load_board(h_board, argv[1], nx, ny);
         queue.enqueueWriteBuffer(d_board_tick, CL_FALSE, 0, nx * ny * sizeof(char), &h_board.begin()); //Aca hay error
 
@@ -122,6 +141,7 @@ int main(int argc, char** argv)
         cl::LocalSpaceArg localmem = cl::Local(sizeof(char) * (bx + 2) * (by + 2));
 
         // Loop
+        std::chrono::steady_clock::time_point ti = std::chrono::steady_clock::now();
         for (unsigned int i = 0; i < iterations; i++)
         {
             // Apply the rules of Life
@@ -133,6 +153,7 @@ int main(int argc, char** argv)
             d_board_tick = d_board_tock;
             d_board_tock = tmp;
         }
+        std::chrono::steady_clock::time_point tf = std::chrono::steady_clock::now();
 
         // Copy back the memory to the host
         queue.enqueueReadBuffer(d_board_tick, CL_FALSE, 0, nx * ny * sizeof(char), &h_board.begin());  //Aca hay error
@@ -140,6 +161,7 @@ int main(int argc, char** argv)
         // Display the final state
         std::cout << "Finishing state\n";
         print_board(h_board, nx, ny);
+        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(tf - ti).count() << "[µs]" << std::endl;
 
         // Save the final state of the board
         save_board(h_board, nx, ny);
@@ -197,6 +219,57 @@ void load_board(std::vector<char>& board, const char* file, const unsigned int n
     }
 
     fp.close();
+}
+//Function to choose the parameters of nx, ny and iterations
+void load_chosen_params(){
+    std::ofstream fp("inputs/ChosenParams.params");
+    unsigned int x;
+    unsigned int y;
+    unsigned int ite;
+    std::cout << "Choose Board Width" << std::endl;
+    std::cin >> x;
+    std::cout << "Choose Board Height" << std::endl;
+    std::cin >> y;
+    std::cout << "Choose Amount of Iterations" << std::endl;
+    std::cin >> ite;
+    fp << x << std::endl;
+    fp << y << std::endl;
+    fp << ite << std::endl;
+    
+}
+//Functions to choose block sizes of nx, ny
+int load_chosen_blocksizeX() {
+    int x;
+    std::cout << "Choose Block Width" << std::endl;
+    std::cin >> x;
+    return x;
+}
+int load_chosen_blocksizeY() {
+    int y;
+    std::cout << "Choose Block Height" << std::endl;
+    std::cin >> y;
+    return y;
+}
+
+// Function to load random values to each cell in board
+void load_random_board(const unsigned int nx, const unsigned int ny)
+{
+    std::ofstream file("inputs/RandomInputs.dat");
+    unsigned int total = nx * ny;
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 gen(rd()); // seed the generator
+    std::uniform_int_distribution<> distrx(0, nx - 1);
+    std::uniform_int_distribution<> distry(0, nx - 1);
+    unsigned int randx = (unsigned int)distrx(gen);
+    unsigned int randy = (unsigned int)distry(gen);
+    for (int i = 0; i < randx; i++)
+    {
+        for (int j = 0; j < randy; j++)
+        {
+            file << distrx(gen) << " " << distry(gen) << 1 << std::endl;
+        }
+    }
+
 }
 
 // Function to print out the board to stdout
