@@ -5,6 +5,7 @@ project(GameOfLife
 	LANGUAGES CXX CUDA
 )
 
+
 enable_language(CUDA)
 
 foreach(lang CXX CUDA)
@@ -17,3 +18,7 @@ include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 add_executable(GPUCudaGameOfLife main.cpp "cuda-gpu/GPUGameOfLife.h" "cuda-gpu/kernelWithIfs.cu")
 add_executable(CPUGameOfLife cpu-test.cpp "cpu/SerialCPUGameOfLife.h")
+
+# add_subdirectory(third_party)
+
+add_subdirectory(opencl-gpu)

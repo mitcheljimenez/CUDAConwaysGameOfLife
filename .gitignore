@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 
 build/
+final_state.dat
+.idea
